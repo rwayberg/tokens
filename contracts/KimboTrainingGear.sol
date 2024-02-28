@@ -1,8 +1,8 @@
-
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/token/ERC1155/extentions/ERC1155Burnable.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -15,7 +15,7 @@ contract KimboTrainingGear is ERC1155, ERC1155Burnable, Ownable {
 
 //replace with IPFS files
 //create collection json
-    constructor() public ERC1155("https://ipfs.io/ips/HASH/{id}.json") {
+    constructor() Ownable(msg.sender) ERC1155("https://ipfs.io/ips/HASH/{id}.json") {
         _mint(msg.sender, LEASH, 10**18, "");
         _mint(msg.sender, HARNESS, 10**27, "");
         _mint(msg.sender, THORS_HAMMER, 1, "");
@@ -23,31 +23,41 @@ contract KimboTrainingGear is ERC1155, ERC1155Burnable, Ownable {
         _mint(msg.sender, BACKPACK, 10**9, "");
     }
     //Override the URI function to provide token-specific metadata - OPENSEA
-    function uri{uint256 _tokenid}
+    function uri(uint256 _tokenid) 
      public pure override returns (string memory) {
         return string(abi.encodePacked("https://ipfs.io/ipfs/HASH/", Strings.toString(_tokenid), ".json"));
-    }
+     }
+    
 
     //Provide a URI for the collection - OPENSEA
-    function contractURI public pure returns (string memory) {
-        return "https://ipfs.io/ipfs/HASH/collection.json"
+    function contractURI () public pure returns (string memory) {
+        return "https://ipfs.io/ipfs/HASH/collection.json";
     }
 
     //air drop?
 
     //Override to enforce burnable??
-    function _beforeTokenTransfer(
-        address operator,
-        address from, 
+    function _update(
+        address from,
         address to,
         uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) internal override {
-        super._beforeTokenTransfer(operator, from, to, ids, amount, data);
+        uint256[] memory values
+    ) internal virtual override {
+        super._update(from, to, ids, values);
         require (
-            msg.sender == owner() || to address(0),
+            msg.sender == owner() || to == address(0),
             "Token cannot be transferred, only burned"
         );
-    } //This will user super._beforeTokenTransfer to run original code before ovverride
+    }
+    // function _beforeTokenTransfer(
+    //     address from, 
+    //     address to,
+    //     uint256  amount
+    // ) internal view {    //ERC1155 does not seem to have this 
+    //     //super._beforeTokenTransfer(from, to, amount);
+    //     require (
+    //         msg.sender == owner() || to == address(0),
+    //         "Token cannot be transferred, only burned"
+    //     );
+    // } //This will user super._beforeTokenTransfer to run original code before ovverride
 }
